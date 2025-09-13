@@ -2,89 +2,48 @@ import React, { useState, useEffect } from 'react';
 import { ExternalLink, RefreshCw, AlertTriangle, Calendar, Filter } from 'lucide-react';
 import PublicHeader from '../components/PublicHeader';
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import { supabase } from '../integrations/supabase/client';
 
-interface NewsItem {
+interface LiveNewsItem {
   id: string;
   title: string;
   link: string;
   source: string;
   publishedAt: string;
   summary: string;
-  category: string;
 }
 
 const LiveBreachNewsPage = () => {
-  const [news, setNews] = useState<NewsItem[]>([]);
+  const [news, setNews] = useState<LiveNewsItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filterSource, setFilterSource] = useState('all');
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock RSS feed data
-  const mockNews: NewsItem[] = [
-    {
-      id: '1',
-      title: 'Allianz Life - 1,115,061 breached accounts',
-      link: 'https://haveibeenpwned.com/Breach/AllianzLife',
-      source: 'HaveIBeenPwned',
-      publishedAt: '2024-01-18T20:20:19Z',
-      summary: 'Allianz Life suffered a July 2024 breach; over 1.1M records exposed including email, name, gender, DOB, phone, address.',
-      category: 'Data Breach'
-    },
-    {
-      id: '2',
-      title: 'Everything we know about the Workday data breach so far',
-      link: 'https://www.itpro.com/security/data-breaches/workday-data-breach',
-      source: 'IT Pro',
-      publishedAt: '2024-01-18T10:48:57Z',
-      summary: 'Workday confirms data breach after threat actors accessed a third-party CRM platform.',
-      category: 'Data Breach'
-    },
-    {
-      id: '3',
-      title: 'Cisco Patches Maximum-Severity Firewall Flaw',
-      link: 'https://www.databreachtoday.in/cisco-patches-maximum-severity-firewall-flaw',
-      source: 'DataBreachToday',
-      publishedAt: '2024-01-19T08:53:17Z',
-      summary: 'Cisco warns of a critical firewall vulnerability that could allow hackers to commandeer servers; patch recommended urgently.',
-      category: 'Security Vulnerability'
-    },
-    {
-      id: '4',
-      title: 'Two agencies investigated and fined Healthplex',
-      link: 'https://databreaches.net/2024/08/19/two-agencies-investigated-healthplex',
-      source: 'DataBreaches.net',
-      publishedAt: '2024-01-19T12:28:35Z',
-      summary: 'Discusses regulatory dynamics in a complex health data breach case.',
-      category: 'Regulatory'
-    },
-    {
-      id: '5',
-      title: 'Traffic Patterns: The Leakzone Part 2',
-      link: 'https://www.upguard.com/breaches/traffic-patterns-the-leakzone-part-2',
-      source: 'UpGuard',
-      publishedAt: '2024-01-12T23:13:57Z',
-      summary: 'UpGuard analyzes the universities, governments, and private companies mentioned in the access logs of hacker forum Leakzone.',
-      category: 'Analysis'
-    },
-    {
-      id: '6',
-      title: 'Learning From the Outliers: How to Increase Trust Levels in 2024',
-      link: 'https://dis-blog.thalesgroup.com/security/2024/05/07/learning-from-the-outliers',
-      source: 'Thales Group',
-      publishedAt: '2024-01-07T10:54:08Z',
-      summary: 'Discusses the importance of trust in digital identities, citing surveys and recommendations for organizations.',
-      category: 'Industry Insights'
-    },
-  ];
+  const fetchNews = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('rss-feed');
+      
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        setNews(data);
+        setLastUpdated(new Date());
+      }
+    } catch (err: any) {
+      console.error('Error fetching RSS feed:', err);
+      setError('Failed to load breach news. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Simulate RSS feed loading
-    const timer = setTimeout(() => {
-      setNews(mockNews);
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
+    fetchNews();
   }, []);
 
   const filteredNews = filterSource === 'all' 
@@ -93,13 +52,8 @@ const LiveBreachNewsPage = () => {
 
   const sources = Array.from(new Set(news.map(item => item.source)));
 
-  const refreshFeeds = async () => {
-    setIsLoading(true);
-    // Simulate refresh
-    setTimeout(() => {
-      setLastUpdated(new Date());
-      setIsLoading(false);
-    }, 1000);
+  const refreshFeeds = () => {
+    fetchNews();
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -112,23 +66,6 @@ const LiveBreachNewsPage = () => {
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `${diffInDays}d ago`;
     return date.toLocaleDateString();
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'Data Breach':
-        return 'bg-red-100 text-red-800';
-      case 'Security Vulnerability':
-        return 'bg-orange-100 text-orange-800';
-      case 'Regulatory':
-        return 'bg-blue-100 text-blue-800';
-      case 'Analysis':
-        return 'bg-purple-100 text-purple-800';
-      case 'Industry Insights':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-slate-100 text-slate-800';
-    }
   };
 
   return (
@@ -190,19 +127,22 @@ const LiveBreachNewsPage = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <LoadingSkeleton type="card" count={6} />
           </div>
+        ) : error ? (
+          <div className="text-center py-12 col-span-full">
+            <AlertTriangle className="mx-auto h-12 w-12 text-alert-400" />
+            <h3 className="mt-2 text-lg font-medium font-heading text-navy-900">Error Loading News</h3>
+            <p className="mt-1 text-slate-500 font-body">{error}</p>
+          </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredNews.map((item) => (
               <article key={item.id} className="bg-white rounded-lg border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
-                <div className="p-6">
+                <div className="p-6 flex flex-col h-full">
                   <div className="flex items-start justify-between mb-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(item.category)}`}>
-                      {item.category}
-                    </span>
                     <span className="text-xs text-slate-500">{formatTimeAgo(item.publishedAt)}</span>
                   </div>
                   
-                  <h3 className="font-semibold font-heading text-navy-900 mb-3 leading-tight">
+                  <h3 className="font-semibold font-heading text-navy-900 mb-3 leading-tight flex-grow">
                     {item.title}
                   </h3>
                   
@@ -210,7 +150,7 @@ const LiveBreachNewsPage = () => {
                     {item.summary}
                   </p>
                   
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mt-auto">
                     <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">
                       {item.source}
                     </span>
@@ -230,7 +170,7 @@ const LiveBreachNewsPage = () => {
           </div>
         )}
 
-        {filteredNews.length === 0 && !isLoading && (
+        {filteredNews.length === 0 && !isLoading && !error && (
           <div className="text-center py-12">
             <AlertTriangle className="mx-auto h-12 w-12 text-alert-400" />
             <h3 className="mt-2 text-lg font-medium font-heading text-navy-900">No news available</h3>
@@ -245,12 +185,11 @@ const LiveBreachNewsPage = () => {
           <h3 className="font-semibold font-heading text-navy-900 mb-4">Our Trusted Sources</h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { name: 'DataBreaches.net', description: 'Investigative reporting on data breaches' },
-              { name: 'HaveIBeenPwned', description: 'Troy Hunt\'s breach discovery service' },
-              { name: 'UpGuard', description: 'Cybersecurity research and analysis' },
-              { name: 'IT Pro', description: 'Enterprise security news and insights' },
-              { name: 'DataBreachToday', description: 'Breaking cybersecurity news' },
-              { name: 'Thales Group', description: 'Digital identity and security research' },
+              { name: 'The Hacker News', description: 'Breaking cybersecurity news' },
+              { name: 'Threatpost', description: 'Independent IT security news' },
+              { name: 'Krebs on Security', description: 'In-depth security news and investigation' },
+              { name: 'Dark Reading', description: 'News and commentary for security professionals' },
+              { name: 'Wired Security', description: 'The latest on cybersecurity from Wired' },
             ].map((source, index) => (
               <div key={index} className="p-3 bg-slate-50 rounded-lg">
                 <h4 className="font-medium font-heading text-navy-900 text-sm">{source.name}</h4>

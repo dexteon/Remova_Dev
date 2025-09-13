@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ExternalLink, Pause, Play, AlertTriangle } from 'lucide-react';
+import { supabase } from '../integrations/supabase/client';
+import LoadingSkeleton from './LoadingSkeleton';
 
 interface BreachNewsItem {
   id: string;
@@ -26,44 +28,36 @@ const LiveBreachNews: React.FC<LiveBreachNewsProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(autoRotate);
   const [isHovered, setIsHovered] = useState(false);
+  const [news, setNews] = useState<BreachNewsItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data - would be fetched from RSS feeds via backend
-  const mockNews: BreachNewsItem[] = [
-    {
-      id: '1',
-      title: 'Allianz Life - 1,115,061 breached accounts',
-      link: 'https://haveibeenpwned.com/Breach/AllianzLife',
-      source: 'HaveIBeenPwned',
-      publishedAt: '2025-01-18T20:20:19Z',
-      summary: 'Allianz Life suffered a July 2025 breach; over 1.1M records exposed including email, name, gender, DOB, phone, address.'
-    },
-    {
-      id: '2',
-      title: 'Everything we know about the Workday data breach so far',
-      link: 'https://www.itpro.com/security/data-breaches/workday-data-breach',
-      source: 'IT Pro',
-      publishedAt: '2025-01-18T10:48:57Z',
-      summary: 'Workday confirms data breach after threat actors accessed a third-party CRM platform.'
-    },
-    {
-      id: '3',
-      title: 'Cisco Patches Maximum-Severity Firewall Flaw',
-      link: 'https://www.databreachtoday.in/cisco-patches-maximum-severity-firewall-flaw',
-      source: 'DataBreachToday',
-      publishedAt: '2025-01-19T08:53:17Z',
-      summary: 'Cisco warns of a critical firewall vulnerability that could allow hackers to commandeer servers; patch recommended urgently.'
-    },
-    {
-      id: '4',
-      title: 'Two agencies in one state investigated and fined Healthplex',
-      link: 'https://databreaches.net/2025/08/19/two-agencies-investigated-healthplex',
-      source: 'DataBreaches.net',
-      publishedAt: '2025-01-19T12:28:35Z',
-      summary: 'Discusses regulatory dynamics in a complex health data breach case.'
-    }
-  ];
+  useEffect(() => {
+    const fetchNews = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const { data, error } = await supabase.functions.invoke('rss-feed');
+        
+        if (error) {
+          throw error;
+        }
 
-  const visibleNews = mockNews.slice(0, maxItems);
+        if (data) {
+          setNews(data);
+        }
+      } catch (err: any) {
+        console.error('Error fetching RSS feed:', err);
+        setError('Failed to load breach news. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNews();
+  }, []);
+
+  const visibleNews = news.slice(0, maxItems);
 
   useEffect(() => {
     if (!isPlaying || isHovered || visibleNews.length <= 1) return;
@@ -98,12 +92,20 @@ const LiveBreachNews: React.FC<LiveBreachNewsProps> = ({
     return `${diffInDays}d ago`;
   };
 
-  if (visibleNews.length === 0) {
+  if (isLoading) {
+    return <LoadingSkeleton type="card" className={className} />;
+  }
+
+  if (error || visibleNews.length === 0) {
     return (
-      <div className={`bg-slate-100 rounded-lg p-6 text-center ${className}`}>
+      <div className={`bg-white rounded-lg border border-slate-200 p-6 text-center ${className}`}>
         <AlertTriangle className="h-8 w-8 text-alert-400 mx-auto mb-2" />
-        <h3 className="text-lg font-medium font-heading text-navy-900 mb-1">No breach news available</h3>
-        <p className="text-slate-600 font-body">We're working to restore the live feed. Check back soon.</p>
+        <h3 className="text-lg font-medium font-heading text-navy-900 mb-1">
+          {error ? 'Error Loading News' : 'No breach news available'}
+        </h3>
+        <p className="text-slate-600 font-body">
+          {error || "We're working to restore the live feed. Check back soon."}
+        </p>
       </div>
     );
   }
