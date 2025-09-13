@@ -154,6 +154,20 @@ class RssAPIService {
         sourceHandle: '@ThalesCloud'
       }
     ];
+    const paginatedItems = mockItems.slice(offset, offset + limit);
+    
+    return {
+      items: paginatedItems,
+      pagination: {
+        limit,
+        offset,
+        total: mockItems.length,
+        hasMore: (offset + limit) < mockItems.length,
+      },
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   // Get Twitter/X sources for display
   getTwitterSources(): TwitterSource[] {
     return [
@@ -195,19 +209,5 @@ class RssAPIService {
     ];
   }
 }
-
-    const paginatedItems = mockItems.slice(offset, offset + limit);
-    
-    return {
-      items: paginatedItems,
-      pagination: {
-        limit,
-        offset,
-        total: mockItems.length,
-        hasMore: (offset + limit) < mockItems.length,
-      },
-      timestamp: new Date().toISOString(),
-    };
-  }
 
 export const rssAPI = new RssAPIService();
