@@ -88,31 +88,10 @@ export interface Subscription {
 }
 
 class OpteryAPIService {
-  private baseURL = 'https://api.optery.com/v1';
   private authToken: string | null = null;
 
   setAuthToken(token: string) {
     this.authToken = token;
-  }
-
-  private async request(endpoint: string, options: RequestInit = {}) {
-    const url = `${this.baseURL}${endpoint}`;
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(this.authToken ? { 'Authorization': `Bearer ${this.authToken}` } : {}),
-      ...options.headers,
-    };
-
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
-    }
-
-    return response.json();
   }
 
   // Member Management
@@ -157,38 +136,38 @@ class OpteryAPIService {
     }), 1000));
   }
 
-  async deleteMember(uuid: string): Promise<void> {
+  async deleteMember(_uuid: string): Promise<void> {
     // Mock implementation
     return new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   // Address Management
-  async addMemberAddress(memberUuid: string, address: Address): Promise<void> {
+  async addMemberAddress(_memberUuid: string, _address: Address): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   // Email Management
-  async addMemberEmail(memberUuid: string, email: Email): Promise<void> {
+  async addMemberEmail(_memberUuid: string, _email: Email): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   // Phone Management
-  async addMemberPhone(memberUuid: string, phone: Phone): Promise<void> {
+  async addMemberPhone(_memberUuid: string, _phone: Phone): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   // Relative Management
-  async addMemberRelative(memberUuid: string, relative: Relative): Promise<void> {
+  async addMemberRelative(_memberUuid: string, _relative: Relative): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   // Company Management
-  async addMemberCompany(memberUuid: string, company: Company): Promise<void> {
+  async addMemberCompany(_memberUuid: string, _company: Company): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   // Opt-Out Management
-  async getOptOutStatistics(memberUuid: string): Promise<OptOutStatistics> {
+  async getOptOutStatistics(_memberUuid: string): Promise<OptOutStatistics> {
     // Mock implementation
     return new Promise(resolve => setTimeout(() => resolve({
       totalRemovals: 87,
@@ -198,7 +177,7 @@ class OpteryAPIService {
     }), 500));
   }
 
-  async getOptOutEvents(memberUuid: string): Promise<OptOutEvent[]> {
+  async getOptOutEvents(_memberUuid: string): Promise<OptOutEvent[]> {
     // Mock implementation
     return new Promise(resolve => setTimeout(() => resolve([
       {
@@ -218,7 +197,7 @@ class OpteryAPIService {
     ]), 500));
   }
 
-  async getOptOutRecords(memberUuid: string): Promise<OptOutRecord[]> {
+  async getOptOutRecords(_memberUuid: string): Promise<OptOutRecord[]> {
     // Mock implementation
     return new Promise(resolve => setTimeout(() => resolve([
       {
@@ -239,11 +218,11 @@ class OpteryAPIService {
     ]), 500));
   }
 
-  async pauseScan(memberUuid: string): Promise<void> {
+  async pauseScan(_memberUuid: string): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, 1000));
   }
 
-  async resumeScan(memberUuid: string): Promise<void> {
+  async resumeScan(_memberUuid: string): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, 1000));
   }
 
@@ -306,7 +285,7 @@ class OpteryAPIService {
     }), 1000));
   }
 
-  async cancelSubscription(memberUuid: string): Promise<void> {
+  async cancelSubscription(_memberUuid: string): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, 1000));
   }
 }

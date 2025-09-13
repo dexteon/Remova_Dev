@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Activity, AlertTriangle, Clock, Users, TrendingUp, Search, Filter } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Activity, AlertTriangle, Clock, Users, Search } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 
@@ -15,7 +15,7 @@ const AdminPage = () => {
     activeUsers: 0,
   });
 
-  const [apiEvents, setApiEvents] = useState([
+  const [apiEvents, _setApiEvents] = useState([
     {
       id: 1,
       timestamp: '2024-01-19T14:30:00Z',

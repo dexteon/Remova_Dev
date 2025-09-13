@@ -1,12 +1,21 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+// @ts-nocheck
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts'
 import { parse } from 'https://deno.land/x/xml@2.1.1/mod.ts'
 
 const RSS_FEEDS = [
+  // Original Feeds
   'https://feeds.feedburner.com/TheHackersNews',
   'https://threatpost.com/feed/',
   'https://krebsonsecurity.com/feed/',
   'https://www.darkreading.com/rss_simple.asp',
   'https://www.wired.com/feed/category/security/latest/rss',
+  // New Feeds from user
+  'https://databreaches.net/feed/',
+  'https://www.upguard.com/breaches/rss.xml',
+  'https://feeds.feedburner.com/HaveIBeenPwnedLatestBreaches',
+  'https://www.itpro.com/feeds/tag/data-breaches',
+  'https://currentscams.com/index.php/feed/',
+  'https://dis-blog.thalesgroup.com/tag/data-breach/feed/',
 ]
 
 const corsHeaders = {
@@ -50,7 +59,7 @@ async function fetchAndParseFeed(url: string) {
   }
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -62,14 +71,14 @@ serve(async (req) => {
 
     const sortedItems = combinedItems
       .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-      .slice(0, 20)
+      .slice(0, 50) // Increased limit to 50 to accommodate more feeds
 
     return new Response(JSON.stringify(sortedItems), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     })

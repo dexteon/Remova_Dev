@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, ArrowRight, ArrowLeft, Check, MapPin, Mail, Phone, Users, Building, Zap } from 'lucide-react';
+import { Shield, ArrowRight, ArrowLeft, Check, MapPin, Mail, Users, Building, Zap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 

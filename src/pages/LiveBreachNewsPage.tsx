@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ExternalLink, RefreshCw, AlertTriangle, Calendar, Filter } from 'lucide-react';
 import PublicHeader from '../components/PublicHeader';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import { supabase } from '../integrations/supabase/client';
+import TwitterNewsSources from '../components/TwitterNewsSources';
 
 interface LiveNewsItem {
   id: string;
@@ -180,24 +181,7 @@ const LiveBreachNewsPage = () => {
           </div>
         )}
 
-        {/* RSS Sources Info */}
-        <div className="mt-12 bg-white rounded-lg border border-slate-200 p-6">
-          <h3 className="font-semibold font-heading text-navy-900 mb-4">Our Trusted Sources</h3>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              { name: 'The Hacker News', description: 'Breaking cybersecurity news' },
-              { name: 'Threatpost', description: 'Independent IT security news' },
-              { name: 'Krebs on Security', description: 'In-depth security news and investigation' },
-              { name: 'Dark Reading', description: 'News and commentary for security professionals' },
-              { name: 'Wired Security', description: 'The latest on cybersecurity from Wired' },
-            ].map((source, index) => (
-              <div key={index} className="p-3 bg-slate-50 rounded-lg">
-                <h4 className="font-medium font-heading text-navy-900 text-sm">{source.name}</h4>
-                <p className="text-xs text-slate-600 mt-1 font-body">{source.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        <TwitterNewsSources />
       </div>
     </div>
   );

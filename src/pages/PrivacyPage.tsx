@@ -1,4 +1,3 @@
-import React from 'react';
 import PublicHeader from '../components/PublicHeader';
 
 const PrivacyPage = () => {

@@ -1,6 +1,5 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Trash2, Eye, Shield, ArrowRight, CheckCircle, Star, Play, Zap } from 'lucide-react';
+import { Search, Trash2, Eye, Shield, ArrowRight, CheckCircle, Star, Play } from 'lucide-react';
 import PublicHeader from '../components/PublicHeader';
 import LiveBreachNews from '../components/LiveBreachNews';
 
@@ -75,11 +74,6 @@ const HomePage = () => {
         'Automated opt-out & removal requests',
         'Exposure dashboard with statistics',
         'Monthly privacy status reports',
-      ],
-      addOns: [
-        'Dark Web Monitoring: +$5/year',
-        'Breach Alerts SMS/Email: +$3/year',
-        'Priority Removals (24h): +$10/year',
       ],
       addOns: [
         'Dark Web Monitoring: +$5/year',
@@ -166,34 +160,6 @@ const HomePage = () => {
                 <span>256-bit Encryption</span>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Live Breach News Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold font-heading text-navy-900 mb-4">
-              Stay Informed About Data Breaches
-            </h2>
-            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-              Real-time updates from trusted security sources help you understand the evolving threat landscape.
-            </p>
-          </div>
-
-          <div className="max-w-4xl mx-auto">
-            <LiveBreachNews autoRotate={true} showControls={true} maxItems={4} />
-          </div>
-
-          <div className="text-center mt-8">
-            <Link
-              to="/live-breach-news"
-              className="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center space-x-1"
-            >
-              <span>View all breach news</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
           </div>
         </div>
       </section>
@@ -335,19 +301,6 @@ const HomePage = () => {
                     <h4 className="text-sm font-semibold text-slate-300 mb-3">Available Add-ons:</h4>
                     <ul className="space-y-2">
                       {plan.addOns.map((addOn, addOnIndex) => (
-                        <li key={addOnIndex} className="text-xs text-slate-400">
-                          {addOn}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                
-                {plan.addOns && (
-                  <div className="mb-8">
-                    <h4 className="text-sm font-semibold text-slate-300 mb-3">Available Add-ons:</h4>
-                    <ul className="space-y-2">
-                      {plan.addOns.map((addOn, addOnIndex) => (
                         <li key={addOnIndex} className="text-xs text-slate-400 font-body">
                           {addOn}
                         </li>
@@ -376,6 +329,34 @@ const HomePage = () => {
               className="text-primary-400 hover:text-primary-300 font-medium inline-flex items-center space-x-1"
             >
               <span>View detailed pricing</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Live Breach News Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold font-heading text-navy-900 mb-4">
+              Stay Informed About Data Breaches
+            </h2>
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+              Real-time updates from trusted security sources help you understand the evolving threat landscape.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <LiveBreachNews autoRotate={true} showControls={true} maxItems={4} />
+          </div>
+
+          <div className="text-center mt-8">
+            <Link
+              to="/live-breach-news"
+              className="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center space-x-1"
+            >
+              <span>View all breach news</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

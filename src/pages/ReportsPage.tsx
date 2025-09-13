@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter, Download, Eye, CheckCircle, Clock, AlertTriangle, Camera, X } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import LoadingSkeleton from '../components/LoadingSkeleton';
@@ -10,7 +10,7 @@ const ReportsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Mock data - would come from Optery API
-  const [brokerData, setBrokerData] = useState([
+  const [brokerData, _setBrokerData] = useState([
     {
       id: 1,
       name: 'WhitePages.com',

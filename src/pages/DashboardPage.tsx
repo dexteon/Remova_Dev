@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Shield, TrendingUp, AlertTriangle, CheckCircle, Clock, Camera, Activity, Download, RefreshCw, Zap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Shield, AlertTriangle, CheckCircle, Clock, Camera, Activity, Download, RefreshCw, Zap } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,7 +14,7 @@ const DashboardPage = () => {
     nextScanTime: '',
   });
 
-  const [recentActivity, setRecentActivity] = useState([
+  const [recentActivity, _setRecentActivity] = useState([
     {
       id: 1,
       type: 'removal_completed',

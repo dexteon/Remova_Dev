@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Bell, Mail, Smartphone, Clock, CheckCircle, AlertTriangle, Settings } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import toast from 'react-hot-toast';

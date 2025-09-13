@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { User, Mail, Calendar, CreditCard, Shield, Bell, Lock, Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
+import { User, CreditCard, Shield, Bell, Lock, Eye, EyeOff } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';

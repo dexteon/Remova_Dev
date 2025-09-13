@@ -1,5 +1,4 @@
-import React from 'react';
-import { Search, Trash2, Eye, Shield, ArrowRight, CheckCircle, Play } from 'lucide-react';
+import { Search, Trash2, Eye, Shield, ArrowRight, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PublicHeader from '../components/PublicHeader';
 
