@@ -170,6 +170,124 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Pricing Preview Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold font-heading text-navy-900 mb-4">
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+              Choose the protection plan that fits your needs. All plans include unlimited scans and professional removal services.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 text-center">
+              <h3 className="text-xl font-bold font-heading text-navy-900 mb-2">Personal</h3>
+              <div className="mb-4">
+                <span className="text-3xl font-bold text-navy-900">$20</span>
+                <span className="text-slate-500 ml-1">/year</span>
+              </div>
+              <p className="text-slate-600 mb-4 font-body">Perfect for individuals</p>
+              <ul className="text-sm text-slate-600 space-y-2 mb-6">
+                <li className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-success-500" />
+                  <span>Unlimited data broker scans</span>
+                </li>
+                <li className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-success-500" />
+                  <span>Automated removal requests</span>
+                </li>
+                <li className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-success-500" />
+                  <span>Monthly privacy reports</span>
+                </li>
+              </ul>
+              <Link
+                to="/register"
+                className="w-full bg-slate-600 hover:bg-slate-700 text-white py-2 px-4 rounded-lg font-medium transition-colors block text-center"
+              >
+                Get Started
+              </Link>
+            </div>
+
+            <div className="bg-primary-50 p-6 rounded-xl border-2 border-primary-500 text-center relative">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <span className="bg-primary-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                  Most Popular
+                </span>
+              </div>
+              <h3 className="text-xl font-bold font-heading text-navy-900 mb-2">Family</h3>
+              <div className="mb-4">
+                <span className="text-3xl font-bold text-navy-900">$45</span>
+                <span className="text-slate-500 ml-1">/year</span>
+              </div>
+              <p className="text-slate-600 mb-4 font-body">Up to 3 people</p>
+              <ul className="text-sm text-slate-600 space-y-2 mb-6">
+                <li className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-success-500" />
+                  <span>Everything in Personal</span>
+                </li>
+                <li className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-success-500" />
+                  <span>Covers 3 family members</span>
+                </li>
+                <li className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-success-500" />
+                  <span>Shared family dashboard</span>
+                </li>
+              </ul>
+              <Link
+                to="/register"
+                className="w-full bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg font-medium transition-colors block text-center"
+              >
+                Get Started
+              </Link>
+            </div>
+
+            <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 text-center">
+              <h3 className="text-xl font-bold font-heading text-navy-900 mb-2">Group</h3>
+              <div className="mb-4">
+                <span className="text-3xl font-bold text-navy-900">$65</span>
+                <span className="text-slate-500 ml-1">/year</span>
+              </div>
+              <p className="text-slate-600 mb-4 font-body">Up to 5 people</p>
+              <ul className="text-sm text-slate-600 space-y-2 mb-6">
+                <li className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-success-500" />
+                  <span>Everything in Family</span>
+                </li>
+                <li className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-success-500" />
+                  <span>Covers up to 5 people</span>
+                </li>
+                <li className="flex items-center justify-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-success-500" />
+                  <span>Priority support</span>
+                </li>
+              </ul>
+              <Link
+                to="/register"
+                className="w-full bg-slate-600 hover:bg-slate-700 text-white py-2 px-4 rounded-lg font-medium transition-colors block text-center"
+              >
+                Get Started
+              </Link>
+            </div>
+          </div>
+
+          <div className="text-center mt-8">
+            <Link
+              to="/pricing"
+              className="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center space-x-1"
+            >
+              <span>View detailed pricing and add-ons</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Live Breach News Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
