@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { parse } from 'https://deno.land/x/xml@2.1.3/mod.ts'
-import RSS_FEEDS from './feeds.json' assert { type: 'json' }
+import { RSS_FEEDS } from './feeds.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
