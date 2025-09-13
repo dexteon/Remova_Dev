@@ -234,12 +234,7 @@ const LiveBreachNewsPage = () => {
       </div>
     </div>
   );
-      setLastUpdated(new Date());
-      setIsLoading(false);
-    }, 1000);
-  };
 
-  const formatTimeAgo = (dateString: string) => {
   return (
     <div className="min-h-screen bg-slate-50">
       <PublicHeader />
