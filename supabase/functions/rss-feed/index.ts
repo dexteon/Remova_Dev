@@ -1,90 +1,176 @@
-// @ts-nocheck
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
-import { parse } from 'https://deno.land/x/xml@2.1.3/mod.ts'
 
-// To manage the news sources, edit the list of URLs in the RSS_FEEDS array below.
 const RSS_FEEDS = [
   "https://feeds.feedburner.com/TheHackersNews",
-  // "https://threatpost.com/feed/", // Removed as the site is defunct and causes errors.
   "https://krebsonsecurity.com/feed/",
   "https://www.darkreading.com/rss_simple.asp",
   "https://www.wired.com/feed/category/security/latest/rss",
   "https://databreaches.net/feed/",
-  "https://www.upguard.com/breaches/rss.xml",
-  "https://feeds.feedburner.com/HaveIBeenPwnedLatestBreaches",
-  "https://www.itpro.com/feeds/tag/data-breaches",
-  "https://currentscams.com/index.php/feed/",
-  "https://dis-blog.thalesgroup.com/tag/data-breach/feed/"
+  "https://www.bleepingcomputer.com/feed/",
+  "https://therecord.media/feed/",
+  "https://feeds.feedburner.com/HaveIBeenPwnedLatestBreaches"
 ];
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+function extractTextFromElement(element: any): string {
+  if (typeof element === 'string') return element;
+  if (element?.['#text']) return element['#text'];
+  if (element?.[0]?.['#text']) return element[0]['#text'];
+  if (element?.[0]) return element[0];
+  return element || '';
+}
+
+function extractLinkFromElement(element: any): string {
+  if (typeof element === 'string') return element;
+  if (element?.['@href']) return element['@href'];
+  if (element?.['#text']) return element['#text'];
+  if (element?.[0]?.['@href']) return element[0]['@href'];
+  if (element?.[0]?.['#text']) return element[0]['#text'];
+  if (element?.[0]) return element[0];
+  return element || '';
 }
 
 async function fetchAndParseFeed(url: string) {
   try {
-    const response = await fetch(url, {
-      headers: { 'User-Agent': 'RemovaRSSFetcher/1.0' },
-    })
-    if (!response.ok) {
-      console.error(`Failed to fetch ${url}: ${response.statusText}`)
-      return []
-    }
-    const xml = await response.text()
-    const document: any = parse(xml)
+    console.log(`Fetching feed: ${url}`);
     
-    const items = document.rss?.channel?.item || document.feed?.entry || []
-
-    return (Array.isArray(items) ? items : [items]).map((item: any) => {
-      const title = item.title?.['#text'] || item.title
-      const link = item.link?.['@href'] || item.link?.['#text'] || item.link
-      const pubDate = item.pubDate?.['#text'] || item.published?.['#text'] || item.updated?.['#text'] || new Date().toISOString()
-      const summary = item.description?.['#text'] || item.summary?.['#text'] || ''
-      const source = document.rss?.channel?.title?.['#text'] || document.feed?.title?.['#text'] || new URL(url).hostname
-
-      return {
-        id: link || title + pubDate,
-        title,
-        link,
-        publishedAt: new Date(pubDate).toISOString(),
-        summary: summary.replace(/<[^>]*>?/gm, '').substring(0, 200) + '...',
-        source,
+    const response = await fetch(url, {
+      headers: { 
+        'User-Agent': 'RemovaRSSFetcher/1.0',
+        'Accept': 'application/rss+xml, application/xml, text/xml'
+      },
+      signal: AbortSignal.timeout(10000) // 10 second timeout
+    });
+    
+    if (!response.ok) {
+      console.error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+      return [];
+    }
+    
+    const xml = await response.text();
+    console.log(`Fetched ${xml.length} characters from ${url}`);
+    
+    // Simple XML parsing without external dependencies
+    const items = [];
+    
+    // Extract channel/feed title
+    let feedTitle = url.split('/')[2]; // fallback to domain
+    const channelTitleMatch = xml.match(/<title[^>]*>([^<]+)<\/title>/i);
+    if (channelTitleMatch) {
+      feedTitle = channelTitleMatch[1].trim();
+    }
+    
+    // Find all items
+    const itemMatches = xml.matchAll(/<item[^>]*>([\s\S]*?)<\/item>/gi);
+    
+    for (const match of itemMatches) {
+      const itemXml = match[1];
+      
+      // Extract title
+      const titleMatch = itemXml.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      const title = titleMatch ? titleMatch[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').trim() : '';
+      
+      // Extract link
+      const linkMatch = itemXml.match(/<link[^>]*>([\s\S]*?)<\/link>/i) || 
+                       itemXml.match(/<link[^>]*href=["']([^"']+)["'][^>]*>/i);
+      const link = linkMatch ? linkMatch[1].trim() : '';
+      
+      // Extract publication date
+      const pubDateMatch = itemXml.match(/<pubDate[^>]*>([\s\S]*?)<\/pubDate>/i) ||
+                          itemXml.match(/<published[^>]*>([\s\S]*?)<\/published>/i) ||
+                          itemXml.match(/<dc:date[^>]*>([\s\S]*?)<\/dc:date>/i);
+      const pubDate = pubDateMatch ? pubDateMatch[1].trim() : new Date().toISOString();
+      
+      // Extract description/summary
+      const descMatch = itemXml.match(/<description[^>]*>([\s\S]*?)<\/description>/i) ||
+                       itemXml.match(/<summary[^>]*>([\s\S]*?)<\/summary>/i) ||
+                       itemXml.match(/<content[^>]*>([\s\S]*?)<\/content>/i);
+      let description = descMatch ? descMatch[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1') : '';
+      
+      // Clean HTML tags from description
+      description = description.replace(/<[^>]*>/g, ' ')
+                             .replace(/\s+/g, ' ')
+                             .trim()
+                             .substring(0, 200);
+      
+      if (title && link && title.length > 10) {
+        items.push({
+          id: `${url}-${items.length}`,
+          title: title.substring(0, 150),
+          link: link.startsWith('http') ? link : new URL(link, url).href,
+          publishedAt: new Date(pubDate).toISOString(),
+          summary: description + (description.length >= 200 ? '...' : ''),
+          source: feedTitle
+        });
       }
-    }).filter(item => item.title && item.link)
+    }
+    
+    console.log(`Parsed ${items.length} items from ${url}`);
+    return items;
+    
   } catch (error) {
-    console.error(`Error processing feed ${url}:`, error)
-    return []
+    console.error(`Error processing feed ${url}:`, error);
+    return [];
   }
 }
 
 serve(async (req: Request) => {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const allItemsPromises = RSS_FEEDS.map(fetchAndParseFeed)
-    const results = await Promise.allSettled(allItemsPromises)
-
-    const successfulFeeds = results
-      .filter(result => result.status === 'fulfilled' && result.value)
-      .map(result => (result as PromiseFulfilledResult<any[]>).value);
-
-    const combinedItems = successfulFeeds.flat()
-
-    const sortedItems = combinedItems
+    console.log('Starting RSS feed aggregation...');
+    
+    // Fetch feeds with a reasonable concurrency limit
+    const batchSize = 3;
+    const allItems = [];
+    
+    for (let i = 0; i < RSS_FEEDS.length; i += batchSize) {
+      const batch = RSS_FEEDS.slice(i, i + batchSize);
+      const batchPromises = batch.map(fetchAndParseFeed);
+      const batchResults = await Promise.allSettled(batchPromises);
+      
+      for (const result of batchResults) {
+        if (result.status === 'fulfilled') {
+          allItems.push(...result.value);
+        }
+      }
+    }
+    
+    console.log(`Total items collected: ${allItems.length}`);
+    
+    // Sort by publication date and limit results
+    const sortedItems = allItems
+      .filter(item => item.title && item.link)
       .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-      .slice(0, 50)
+      .slice(0, 50);
+
+    console.log(`Returning ${sortedItems.length} sorted items`);
 
     return new Response(JSON.stringify(sortedItems), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=300' // Cache for 5 minutes
+      },
       status: 200,
-    })
+    });
+    
   } catch (error) {
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
+    console.error('RSS feed aggregation error:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Failed to fetch RSS feeds',
+      message: error.message 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
-    })
+    });
   }
-})
+});
