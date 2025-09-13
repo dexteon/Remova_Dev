@@ -5,7 +5,7 @@ import { parse } from 'https://deno.land/x/xml@2.1.3/mod.ts'
 // To manage the news sources, edit the list of URLs in the RSS_FEEDS array below.
 const RSS_FEEDS = [
   "https://feeds.feedburner.com/TheHackersNews",
-  "https://threatpost.com/feed/",
+  // "https://threatpost.com/feed/", // Removed as the site is defunct and causes errors.
   "https://krebsonsecurity.com/feed/",
   "https://www.darkreading.com/rss_simple.asp",
   "https://www.wired.com/feed/category/security/latest/rss",
@@ -65,8 +65,13 @@ serve(async (req: Request) => {
 
   try {
     const allItemsPromises = RSS_FEEDS.map(fetchAndParseFeed)
-    const allItemsArrays = await Promise.all(allItemsPromises)
-    const combinedItems = allItemsArrays.flat()
+    const results = await Promise.allSettled(allItemsPromises)
+
+    const successfulFeeds = results
+      .filter(result => result.status === 'fulfilled' && result.value)
+      .map(result => (result as PromiseFulfilledResult<any[]>).value);
+
+    const combinedItems = successfulFeeds.flat()
 
     const sortedItems = combinedItems
       .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
