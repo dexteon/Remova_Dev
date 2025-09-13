@@ -33,6 +33,7 @@ const LiveBreachNewsPage = () => {
     } finally {
       setIsLoading(false);
     }
+  };
 
   const filteredNews = filterSource === 'all' 
     ? news 
