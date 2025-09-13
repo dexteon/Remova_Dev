@@ -88,12 +88,6 @@ export interface Subscription {
 }
 
 class OpteryAPIService {
-  private authToken: string | null = null;
-
-  setAuthToken(token: string) {
-    this.authToken = token;
-  }
-
   // Member Management
   async createMember(memberData: {
     firstName: string;
