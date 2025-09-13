@@ -1,7 +1,21 @@
 // @ts-nocheck
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { parse } from 'https://deno.land/x/xml@2.1.3/mod.ts'
-import { RSS_FEEDS } from './feeds.ts'
+
+// To manage the news sources, edit the list of URLs in the RSS_FEEDS array below.
+const RSS_FEEDS = [
+  "https://feeds.feedburner.com/TheHackersNews",
+  "https://threatpost.com/feed/",
+  "https://krebsonsecurity.com/feed/",
+  "https://www.darkreading.com/rss_simple.asp",
+  "https://www.wired.com/feed/category/security/latest/rss",
+  "https://databreaches.net/feed/",
+  "https://www.upguard.com/breaches/rss.xml",
+  "https://feeds.feedburner.com/HaveIBeenPwnedLatestBreaches",
+  "https://www.itpro.com/feeds/tag/data-breaches",
+  "https://currentscams.com/index.php/feed/",
+  "https://dis-blog.thalesgroup.com/tag/data-breach/feed/"
+];
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -56,7 +70,7 @@ serve(async (req: Request) => {
 
     const sortedItems = combinedItems
       .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-      .slice(0, 50) // Increased limit to 50 to accommodate more feeds
+      .slice(0, 50)
 
     return new Response(JSON.stringify(sortedItems), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
