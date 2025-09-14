@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../integrations/supabase/client';
 
 interface User {
   id: string;
@@ -7,8 +8,9 @@ interface User {
   memberUuid: string;
   hasCompletedOnboarding: boolean;
   isAdmin: boolean;
-  plan: 'personal' | 'family' | 'group' | 'business';
+  plan: string;
   planExpiry: string;
+  subscriptionStatus?: string;
 }
 
 interface AuthContextType {
@@ -49,40 +51,90 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, _password: string) => {
-    // Simulate API call
-    const mockUser: User = {
-      id: '1',
-      email,
-      name: email.split('@')[0],
-      memberUuid: `member-${Date.now()}`,
-      hasCompletedOnboarding: Math.random() > 0.5,
-      isAdmin: email === 'admin@remova.io',
-      plan: 'personal',
-      planExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-    };
-    
-    setUser(mockUser);
-    localStorage.setItem('remova_user', JSON.stringify(mockUser));
+    try {
+      // Sign in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password: _password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        // Fetch subscription data
+        const { data: subscriptionData } = await supabase
+          .from('user_subscriptions')
+          .select(`
+            *,
+            subscription_plans (
+              name,
+              price,
+              interval
+            )
+          `)
+          .eq('user_id', data.user.id)
+          .eq('status', 'active')
+          .single();
+
+        const mockUser: User = {
+          id: data.user.id,
+          email: data.user.email!,
+          name: data.user.user_metadata?.name || email.split('@')[0],
+          memberUuid: `member-${data.user.id}`,
+          hasCompletedOnboarding: !!subscriptionData,
+          isAdmin: email === 'admin@remova.io',
+          plan: subscriptionData?.subscription_plans?.name || 'No Plan',
+          planExpiry: subscriptionData?.current_period_end || '',
+          subscriptionStatus: subscriptionData?.status
+        };
+        
+        setUser(mockUser);
+        localStorage.setItem('remova_user', JSON.stringify(mockUser));
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   };
 
   const register = async (email: string, _password: string, name: string) => {
-    // Simulate API call
-    const mockUser: User = {
-      id: '1',
-      email,
-      name,
-      memberUuid: `member-${Date.now()}`,
-      hasCompletedOnboarding: false,
-      isAdmin: false,
-      plan: 'personal',
-      planExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-    };
-    
-    setUser(mockUser);
-    localStorage.setItem('remova_user', JSON.stringify(mockUser));
+    try {
+      // Sign up with Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: _password,
+        options: {
+          data: {
+            name: name
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const mockUser: User = {
+          id: data.user.id,
+          email,
+          name,
+          memberUuid: `member-${data.user.id}`,
+          hasCompletedOnboarding: false,
+          isAdmin: false,
+          plan: 'No Plan',
+          planExpiry: '',
+        };
+        
+        setUser(mockUser);
+        localStorage.setItem('remova_user', JSON.stringify(mockUser));
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
   };
 
   const logout = () => {
+    supabase.auth.signOut();
     setUser(null);
     localStorage.removeItem('remova_user');
   };

@@ -120,7 +120,14 @@ const DashboardPage = () => {
           <h1 className="text-3xl font-bold font-heading text-navy-900 mb-2">
             Welcome back, {user?.name}
           </h1>
-          <p className="text-slate-600 font-body">Here's your privacy protection overview</p>
+          <p className="text-slate-600 font-body">
+            Here's your privacy protection overview
+            {user?.plan && user.plan !== 'No Plan' && (
+              <span className="ml-2 text-sm bg-primary-100 text-primary-700 px-2 py-1 rounded-full">
+                {user.plan} Plan
+              </span>
+            )}
+          </p>
         </div>
 
         {/* Protection Snapshot */}

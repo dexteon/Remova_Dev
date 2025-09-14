@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, ArrowRight, ArrowLeft, Check, MapPin, Mail, Users, Building, Zap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../integrations/supabase/client';
 import toast from 'react-hot-toast';
 import { OnboardingData } from '../types/onboarding';
 
@@ -26,7 +27,7 @@ const OnboardingPage = () => {
     phones: [''],
     relatives: [{ name: '', relationship: '' }],
     companies: [{ name: '', role: '' }],
-    plan: 'complete-shield',
+    plan: 'price_family_yearly', // Default to family plan price ID
   });
 
   useEffect(() => {
@@ -91,20 +92,63 @@ const OnboardingPage = () => {
   const handleComplete = async () => {
     setIsLoading(true);
     try {
-      // Simulate API calls to Optery
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Get auth token
+      const { data: { session } } = await supabase.auth.getSession();
       
-      // Update user as having completed onboarding  
-      updateUser({ hasCompletedOnboarding: true });
+      if (!session?.access_token) {
+        throw new Error('No authentication session found');
+      }
+
+      // Create Stripe checkout session
+      const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('stripe-checkout', {
+        body: {
+          priceId: data.plan,
+          successUrl: `${window.location.origin}/dashboard?checkout=success`,
+          cancelUrl: `${window.location.origin}/onboarding?checkout=cancelled`
+        },
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      if (checkoutError) {
+        throw checkoutError;
+      }
+
+      if (!checkoutData?.url) {
+        throw new Error('Failed to create checkout session');
+      }
       
-      toast.success('Welcome to Remova! Your protection is now active.');
-      navigate('/dashboard');
+      // Store onboarding data temporarily (you might want to save this to the database)
+      localStorage.setItem('pendingOnboardingData', JSON.stringify(data));
+      
+      // Redirect to Stripe Checkout
+      window.location.href = checkoutData.url;
+      
     } catch (error) {
-      toast.error('An error occurred. Please try again.');
+      console.error('Checkout error:', error);
+      toast.error(error.message || 'Failed to process payment. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Handle successful checkout return
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('checkout') === 'success') {
+      // Clear any stored onboarding data
+      localStorage.removeItem('pendingOnboardingData');
+      // Update user as having completed onboarding
+      updateUser({ hasCompletedOnboarding: true });
+      toast.success('Welcome to Remova! Your subscription is now active.');
+      navigate('/dashboard', { replace: true });
+    } else if (urlParams.get('checkout') === 'cancelled') {
+      toast.error('Payment was cancelled. Please try again.');
+      // Clear the URL parameter
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [navigate, updateUser]);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -186,11 +230,11 @@ const OnboardingPage = () => {
               {isLoading ? (
                 <>
                   <Zap className="animate-spin h-4 w-4" />
-                  <span>Setting up protection...</span>
+                  <span>Redirecting to payment...</span>
                 </>
               ) : currentStep === steps.length - 1 ? (
                 <>
-                  <span>Complete Setup</span>
+                  <span>Continue to Payment</span>
                   <Check className="h-4 w-4" />
                 </>
               ) : (

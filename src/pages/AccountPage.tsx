@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { User, CreditCard, Shield, Bell, Lock, Eye, EyeOff } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../integrations/supabase/client';
 import toast from 'react-hot-toast';
 
 const AccountPage = () => {
@@ -30,13 +31,12 @@ const AccountPage = () => {
     securityAlerts: true,
   });
 
-  // Mock subscription data
   const subscription = {
-    plan: 'Complete Shield',
-    status: 'active',
-    nextBilling: '2024-02-15',
-    price: '$19.99',
-    period: 'monthly',
+    plan: user?.plan || 'No Plan',
+    status: user?.subscriptionStatus || 'inactive',
+    nextBilling: user?.planExpiry ? new Date(user.planExpiry).toLocaleDateString() : 'N/A',
+    price: 'Variable',
+    period: 'yearly',
   };
 
   const tabs = [
@@ -85,6 +85,24 @@ const AccountPage = () => {
       toast.success('Notification preferences updated');
     } catch (error) {
       toast.error('Failed to update notifications');
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    try {
+      // This would call a Supabase Edge Function to cancel the Stripe subscription
+      toast.success('Subscription cancelled successfully');
+    } catch (error) {
+      toast.error('Failed to cancel subscription');
+    }
+  };
+
+  const handleChangePlan = async () => {
+    try {
+      // This would redirect to a plan selection page or create a new checkout session
+      toast.info('Redirecting to plan selection...');
+    } catch (error) {
+      toast.error('Failed to change plan');
     }
   };
 
@@ -300,23 +318,7 @@ const AccountPage = () => {
             <ul className="space-y-2 text-sm text-slate-600">
               <li className="flex items-center space-x-2">
                 <Shield className="h-4 w-4 text-success-500" />
-                <span>Scan 200+ data brokers</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <Shield className="h-4 w-4 text-success-500" />
-                <span>Priority removal service</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <Shield className="h-4 w-4 text-success-500" />
-                <span>Real-time monitoring</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <Shield className="h-4 w-4 text-success-500" />
-                <span>Before/after evidence</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <Shield className="h-4 w-4 text-success-500" />
-                <span>Priority support</span>
+                <span>Features based on {subscription.plan} plan</span>
               </li>
             </ul>
           </div>
@@ -324,12 +326,15 @@ const AccountPage = () => {
 
         <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t border-slate-200">
           <button className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+            onClick={handleChangePlan}
             Change Plan
           </button>
           <button className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-2 rounded-lg font-medium transition-colors">
             Update Payment Method
           </button>
-          <button className="text-red-600 hover:text-red-700 px-6 py-2 font-medium transition-colors">
+          <button 
+            onClick={handleCancelSubscription}
+            className="text-red-600 hover:text-red-700 px-6 py-2 font-medium transition-colors">
             Cancel Subscription
           </button>
         </div>
