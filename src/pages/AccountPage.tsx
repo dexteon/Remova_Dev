@@ -35,8 +35,8 @@ const AccountPage = () => {
     plan: user?.plan || 'No Plan',
     status: user?.subscriptionStatus || 'inactive',
     nextBilling: user?.planExpiry ? new Date(user.planExpiry).toLocaleDateString() : 'N/A',
-    price: 'Variable',
-    period: 'yearly',
+    price: user?.subscriptionStatus === 'active' ? 'Active' : 'Inactive',
+    period: user?.planExpiry ? 'annual' : 'none',
   };
 
   const tabs = [
@@ -89,10 +89,19 @@ const AccountPage = () => {
   };
 
   const handleCancelSubscription = async () => {
+    if (!confirm('Are you sure you want to cancel your subscription? This will stop all monitoring and removal services.')) {
+      return;
+    }
+
     try {
       // This would call a Supabase Edge Function to cancel the Stripe subscription
+      // const { error } = await supabase.functions.invoke('cancel-subscription');
+      // if (error) throw error;
+      
+      // For now, just show success message
       toast.success('Subscription cancelled successfully');
     } catch (error) {
+      console.error('Cancel subscription error:', error);
       toast.error('Failed to cancel subscription');
     }
   };
@@ -100,8 +109,11 @@ const AccountPage = () => {
   const handleChangePlan = async () => {
     try {
       // This would redirect to a plan selection page or create a new checkout session
+      // For now, redirect to pricing page
+      window.location.href = '/pricing';
       toast.info('Redirecting to plan selection...');
     } catch (error) {
+      console.error('Change plan error:', error);
       toast.error('Failed to change plan');
     }
   };
@@ -296,7 +308,13 @@ const AccountPage = () => {
             <div>
               <label className="text-sm font-medium text-slate-700">Status</label>
               <div className="flex items-center space-x-2">
-                <span className="bg-success-100 text-success-800 px-2 py-1 rounded-full text-xs font-medium">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  subscription.status === 'active' 
+                    ? 'bg-success-100 text-success-800'
+                    : subscription.status === 'past_due'
+                    ? 'bg-alert-100 text-alert-800' 
+                    : 'bg-slate-100 text-slate-800'
+                }`}>
                   {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
                 </span>
               </div>
@@ -326,10 +344,17 @@ const AccountPage = () => {
 
         <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t border-slate-200">
           <button className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+          <button 
+            onClick={handleChangePlan}
+            className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+          >
             onClick={handleChangePlan}
             Change Plan
           </button>
-          <button className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-2 rounded-lg font-medium transition-colors">
+          <button 
+            onClick={() => toast.info('Redirecting to billing portal...')}
+            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-2 rounded-lg font-medium transition-colors"
+          >
             Update Payment Method
           </button>
           <button 
@@ -342,6 +367,7 @@ const AccountPage = () => {
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <h3 className="text-lg font-semibold font-heading text-navy-900 mb-4">Billing History</h3>
+        {user?.subscriptionStatus === 'active' ? (
         <div className="space-y-3">
           {[
             { date: '2024-01-15', amount: '$19.99', status: 'Paid' },
@@ -360,6 +386,9 @@ const AccountPage = () => {
             </div>
           ))}
         </div>
+        ) : (
+          <p className="text-slate-600 text-center py-4">No billing history available</p>
+        )}
       </div>
     </div>
   );

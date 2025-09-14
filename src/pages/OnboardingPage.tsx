@@ -28,6 +28,7 @@ const OnboardingPage = () => {
     relatives: [{ name: '', relationship: '' }],
     companies: [{ name: '', role: '' }],
     plan: 'price_family_yearly', // Default to family plan price ID
+    plan: 'price_remova_family_3_annual', // Default to 3-member family plan
   });
 
   useEffect(() => {
@@ -108,10 +109,12 @@ const OnboardingPage = () => {
         },
         headers: {
           'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         }
       });
 
       if (checkoutError) {
+        console.error('Checkout error:', checkoutError);
         throw checkoutError;
       }
 
@@ -122,12 +125,14 @@ const OnboardingPage = () => {
       // Store onboarding data temporarily (you might want to save this to the database)
       localStorage.setItem('pendingOnboardingData', JSON.stringify(data));
       
+      console.log('Redirecting to Stripe Checkout:', checkoutData.url);
       // Redirect to Stripe Checkout
       window.location.href = checkoutData.url;
       
     } catch (error) {
       console.error('Checkout error:', error);
-      toast.error(error.message || 'Failed to process payment. Please try again.');
+      const errorMessage = error?.message || 'Failed to process payment. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

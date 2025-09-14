@@ -20,12 +20,27 @@ serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Fetch active plans from database
-    const { data: plans, error } = await supabaseClient
+    // Parse query parameters
+    const url = new URL(req.url)
+    const planType = url.searchParams.get('type') || 'individual' // individual, family, team
+
+    // Build query based on plan type
+    let query = supabaseClient
       .from('subscription_plans')
       .select('*')
       .eq('active', true)
       .order('price', { ascending: true })
+
+    // Filter by plan type
+    if (planType === 'individual') {
+      query = query.in('metadata->>tier', ['personal', 'extended', 'ultimate'])
+    } else if (planType === 'family') {
+      query = query.in('metadata->>tier', ['family', 'family_plus'])
+    } else if (planType === 'team') {
+      query = query.eq('metadata->>tier', 'team')
+    }
+
+    const { data: plans, error } = await query
 
     if (error) {
       console.error('Database error:', error)
@@ -33,16 +48,25 @@ serve(async (req: Request) => {
     }
 
     // Transform plans for frontend
-    const transformedPlans = plans?.map(plan => ({
-      id: plan.id,
-      name: plan.name,
-      price: `$${(plan.price / 100).toFixed(0)}`,
-      period: `/${plan.interval}`,
-      description: plan.description,
-      features: plan.features || [],
-      stripePriceId: plan.id,
-      stripeProductId: plan.stripe_product_id
-    })) || []
+    const transformedPlans = plans?.map(plan => {
+      const metadata = plan.metadata as any || {}
+      return {
+        id: plan.id,
+        stripeProductId: plan.stripe_product_id,
+        name: plan.name,
+        description: plan.description,
+        price: `$${(plan.price / 100).toFixed(0)}`,
+        originalPrice: plan.price,
+        period: `/${plan.interval}`,
+        features: plan.features || [],
+        stripePriceId: plan.id,
+        popular: plan.name.includes('Family') && metadata.seats === 3, // Mark 3-member family as popular
+        seats: metadata.seats || 1,
+        tier: metadata.tier,
+        savings: metadata.savings,
+        metadata: metadata
+      }
+    }) || []
 
     return new Response(JSON.stringify(transformedPlans), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

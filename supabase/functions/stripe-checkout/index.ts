@@ -53,9 +53,10 @@ serve(async (req: Request) => {
       throw new Error('Invalid plan selected')
     }
 
-    // Create or get Stripe customer
+    // Initialize Stripe
     const stripe = (await import('npm:stripe@14')).default(Deno.env.get('STRIPE_SECRET_KEY')!)
     
+    // Create or get Stripe customer
     let customer
     const { data: existingSubscription } = await supabaseClient
       .from('user_subscriptions')
@@ -68,10 +69,23 @@ serve(async (req: Request) => {
     } else {
       customer = await stripe.customers.create({
         email: user.email,
+        name: user.user_metadata?.name || user.email?.split('@')[0],
         metadata: {
-          user_id: user.id
+          user_id: user.id,
+          supabase_user: 'true'
         }
       })
+    }
+
+    // Prepare metadata for Optery integration
+    const planMetadata = plan.metadata as any || {}
+    const sessionMetadata = {
+      user_id: user.id,
+      plan_id: priceId,
+      optery_plan_uuid: planMetadata.optery_plan_uuid,
+      seats: planMetadata.seats || 1,
+      tier: planMetadata.tier,
+      group_tag_prefix: planMetadata.group_tag_prefix || null
     }
 
     // Create Checkout Session
@@ -85,23 +99,32 @@ serve(async (req: Request) => {
         },
       ],
       mode: 'subscription',
-      success_url: successUrl || `${req.headers.get('origin')}/dashboard?success=true`,
-      cancel_url: cancelUrl || `${req.headers.get('origin')}/onboarding?canceled=true`,
-      metadata: {
-        user_id: user.id,
-        plan_id: priceId
-      },
+      success_url: successUrl || `${req.headers.get('origin')}/dashboard?checkout=success`,
+      cancel_url: cancelUrl || `${req.headers.get('origin')}/onboarding?checkout=cancelled`,
+      metadata: sessionMetadata,
       subscription_data: {
-        metadata: {
-          user_id: user.id,
-          plan_id: priceId
-        }
+        metadata: sessionMetadata,
+        trial_period_days: 0 // No trial for now
+      },
+      automatic_tax: {
+        enabled: true,
+      },
+      customer_update: {
+        address: 'auto',
+        name: 'auto',
+      },
+      invoice_creation: {
+        enabled: true,
       }
     })
 
+    console.log(`Created checkout session ${session.id} for user ${user.id} with plan ${plan.name}`)
+
     return new Response(JSON.stringify({ 
       sessionId: session.id,
-      url: session.url 
+      url: session.url,
+      planName: plan.name,
+      planPrice: plan.price
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,

@@ -42,6 +42,8 @@ serve(async (req: Request) => {
         const session = event.data.object as any
         const userId = session.metadata?.user_id
         const planId = session.metadata?.plan_id
+        const opteryPlanUuid = session.metadata?.optery_plan_uuid
+        const seats = parseInt(session.metadata?.seats || '1')
 
         if (!userId || !planId) {
           console.error('Missing user_id or plan_id in session metadata')
@@ -51,6 +53,30 @@ serve(async (req: Request) => {
         // Get subscription details
         const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
 
+        // Create Optery members based on seats
+        const opteryMembers = []
+        const groupTag = seats > 1 ? `${session.metadata?.group_tag_prefix || 'group'}_${Date.now()}` : null
+
+        try {
+          // This would integrate with Optery API
+          for (let i = 0; i < seats; i++) {
+            // Placeholder for Optery API integration
+            const memberUuid = `member_${userId}_${i}_${Date.now()}`
+            opteryMembers.push(memberUuid)
+            
+            console.log(`Would create Optery member ${memberUuid} with plan ${opteryPlanUuid}`)
+            // TODO: Actual Optery API call:
+            // const opteryMember = await createOpteryMember({
+            //   plan: opteryPlanUuid,
+            //   group_tag: groupTag,
+            //   postpone_scan: 0
+            // })
+          }
+        } catch (opteryError) {
+          console.error('Optery integration error:', opteryError)
+          // Continue with subscription creation even if Optery fails
+        }
+
         // Insert or update user subscription
         const subscriptionData = {
           user_id: userId,
@@ -58,6 +84,7 @@ serve(async (req: Request) => {
           stripe_subscription_id: subscription.id,
           plan_id: planId,
           status: subscription.status,
+          optery_member_uuid: opteryMembers[0] || null, // Primary member UUID
           current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
           current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           cancel_at_period_end: subscription.cancel_at_period_end,
@@ -76,7 +103,10 @@ serve(async (req: Request) => {
           throw upsertError
         }
 
-        console.log(`Successfully processed checkout for user ${userId}`)
+        console.log(`Successfully processed checkout for user ${userId} with ${seats} seats`)
+        
+        // TODO: Send welcome email
+        // TODO: Schedule initial scan
         break
       }
 
@@ -101,6 +131,8 @@ serve(async (req: Request) => {
         }
 
         console.log(`Successfully updated subscription ${subscription.id}`)
+        
+        // TODO: Update Optery subscription if plan changed
         break
       }
 
@@ -122,6 +154,23 @@ serve(async (req: Request) => {
         }
 
         console.log(`Successfully cancelled subscription ${subscription.id}`)
+        
+        // TODO: Cancel Optery subscription
+        // TODO: Schedule data deletion per retention policy
+        break
+      }
+
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as any
+        console.log(`Payment succeeded for subscription ${invoice.subscription}`)
+        // TODO: Send payment confirmation email
+        break
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as any
+        console.log(`Payment failed for subscription ${invoice.subscription}`)
+        // TODO: Send payment failure notification
         break
       }
 

@@ -61,19 +61,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
 
       if (data.user) {
-        // Fetch subscription data
+        // Fetch subscription data with plan details
         const { data: subscriptionData } = await supabase
           .from('user_subscriptions')
           .select(`
             *,
             subscription_plans (
               name,
+              description,
               price,
-              interval
+              interval,
+              features,
+              metadata
             )
           `)
           .eq('user_id', data.user.id)
-          .eq('status', 'active')
+          .in('status', ['active', 'trialing', 'past_due'])
+          .order('created_at', { ascending: false })
           .single();
 
         const mockUser: User = {
@@ -85,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           isAdmin: email === 'admin@remova.io',
           plan: subscriptionData?.subscription_plans?.name || 'No Plan',
           planExpiry: subscriptionData?.current_period_end || '',
-          subscriptionStatus: subscriptionData?.status
+          subscriptionStatus: subscriptionData?.status || 'inactive'
         };
         
         setUser(mockUser);
@@ -122,6 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           isAdmin: false,
           plan: 'No Plan',
           planExpiry: '',
+          subscriptionStatus: 'inactive'
         };
         
         setUser(mockUser);
