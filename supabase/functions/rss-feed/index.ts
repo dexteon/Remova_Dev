@@ -1,14 +1,14 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 
 const RSS_FEEDS = [
-  "https://feeds.feedburner.com/TheHackersNews",
+  "https://thehackernews.com/feeds/posts/default",
   "https://krebsonsecurity.com/feed/",
   "https://www.darkreading.com/rss_simple.asp",
   "https://www.wired.com/feed/category/security/latest/rss",
   "https://databreaches.net/feed/",
   "https://www.bleepingcomputer.com/feed/",
   "https://therecord.media/feed/",
-  "https://feeds.feedburner.com/HaveIBeenPwnedLatestBreaches"
+  "https://haveibeenpwned.com/rss/breaches"
 ];
 
 const corsHeaders = {
@@ -114,7 +114,7 @@ async function fetchAndParseFeed(url: string) {
     return items;
     
   } catch (error) {
-    console.error(`Error processing feed ${url}:`, error);
+    console.error(`Error processing feed ${url}:`, error.message || error);
     return [];
   }
 }

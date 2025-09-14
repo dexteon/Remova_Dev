@@ -82,7 +82,7 @@ const LiveBreachNews: React.FC<LiveBreachNewsProps> = ({
             summary: 'New data protection laws are being implemented globally, giving consumers more control over their personal information and how it is used by companies.'
           }
         ]);
-        setError(null); // Don't show error with fallback data
+        setError(err.message || 'Failed to load live news feed. Showing cached content.');
       } finally {
         setIsLoading(false);
       }
