@@ -1,15 +1,25 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 
-const RSS_FEEDS = [
-  "https://thehackernews.com/feeds/posts/default",
-  "https://krebsonsecurity.com/feed/",
-  "https://www.darkreading.com/rss_simple.asp",
-  "https://www.wired.com/feed/category/security/latest/rss",
-  "https://databreaches.net/feed/",
-  "https://www.bleepingcomputer.com/feed/",
-  "https://therecord.media/feed/",
-  "https://haveibeenpwned.com/rss/breaches"
-];
+// Load RSS feeds from feeds.json
+async function loadFeeds(): Promise<string[]> {
+  try {
+    const feedsFile = await Deno.readTextFile('./feeds.json');
+    return JSON.parse(feedsFile);
+  } catch (error) {
+    console.error('Failed to load feeds.json, using fallback feeds:', error);
+    // Fallback feeds if file loading fails
+    return [
+      "https://thehackernews.com/feeds/posts/default",
+      "https://krebsonsecurity.com/feed/",
+      "https://www.darkreading.com/rss_simple.asp",
+      "https://www.wired.com/feed/category/security/latest/rss",
+      "https://databreaches.net/feed/",
+      "https://www.bleepingcomputer.com/feed/",
+      "https://therecord.media/feed/",
+      "https://haveibeenpwned.com/rss/breaches"
+    ];
+  }
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -127,6 +137,10 @@ serve(async (req: Request) => {
 
   try {
     console.log('Starting RSS feed aggregation...');
+    
+    // Load RSS feeds from configuration
+    const RSS_FEEDS = await loadFeeds();
+    console.log(`Loaded ${RSS_FEEDS.length} RSS feed URLs`);
     
     // Fetch feeds with a reasonable concurrency limit
     const batchSize = 3;
