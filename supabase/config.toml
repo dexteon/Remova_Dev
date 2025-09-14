@@ -6,15 +6,11 @@ allow_net = [
   "thehackernews.com",
   "krebsonsecurity.com", 
   "www.darkreading.com",
-  "www.wired.com",
-  "databreaches.net",
   "www.bleepingcomputer.com",
-  "therecord.media",
-  "haveibeenpwned.com",
   "threatpost.com",
-  "www.upguard.com",
-  "www.itpro.com",
-  "currentscams.com",
-  "dis-blog.thalesgroup.com",
-  "feeds.feedburner.com"
+  "databreaches.net",
+  "therecord.media",
+  "www.wired.com",
+  "feeds.feedburner.com",
+  "feedburner.google.com"
 ]

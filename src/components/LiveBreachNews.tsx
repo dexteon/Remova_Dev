@@ -37,6 +37,7 @@ const LiveBreachNews: React.FC<LiveBreachNewsProps> = ({
       setIsLoading(true);
       setError(null);
       try {
+        console.log('Attempting to fetch RSS feed...');
         const { data, error } = await supabase.functions.invoke('rss-feed', {
           headers: {
             'Content-Type': 'application/json'
@@ -44,13 +45,16 @@ const LiveBreachNews: React.FC<LiveBreachNewsProps> = ({
         });
         
         if (error) {
-          console.error('Supabase function error:', error);
+          console.error('Supabase function error:', error.message || error);
           throw error;
         }
 
-        if (data) {
+        if (data && Array.isArray(data)) {
           console.log('Successfully fetched RSS data:', data.length, 'items');
           setNews(data);
+        } else {
+          console.warn('No data received from RSS feed function');
+          throw new Error('No RSS data received');
         }
       } catch (err: any) {
         console.error('Error fetching RSS feed:', err);
