@@ -108,7 +108,7 @@ const OnboardingPage = () => {
           cancelUrl: `${window.location.origin}/onboarding?checkout=cancelled`
         },
         headers: {
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         }
       });
