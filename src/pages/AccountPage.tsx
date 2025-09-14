@@ -343,12 +343,10 @@ const AccountPage = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t border-slate-200">
-          <button className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
           <button 
             onClick={handleChangePlan}
             className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
           >
-            onClick={handleChangePlan}
             Change Plan
           </button>
           <button 
@@ -359,7 +357,8 @@ const AccountPage = () => {
           </button>
           <button 
             onClick={handleCancelSubscription}
-            className="text-red-600 hover:text-red-700 px-6 py-2 font-medium transition-colors">
+            className="text-red-600 hover:text-red-700 px-6 py-2 font-medium transition-colors"
+          >
             Cancel Subscription
           </button>
         </div>
